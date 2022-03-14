@@ -55,7 +55,7 @@ jobs:
           name: Build Docker image
           command: docker build . -t "${AWS_ECR_ACCOUNT_URL}/jtreutel-caching-demo:${CIRCLE_BUILD_NUM}"
       - aws-ecr/push-image:
-          repo: caching-demo
+          repo: jtreutel-caching-demo
           tag: "${CIRCLE_BUILD_NUM}"
 
 
