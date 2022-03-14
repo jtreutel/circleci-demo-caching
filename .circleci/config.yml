@@ -51,8 +51,6 @@ jobs:
     steps:
       - attach_workspace:
           at: .
-      - aws-ecr/create-repo:
-          repo: caching-demo
       - run: 
           name: Build Docker image
           command: docker build . -t ${AWS_ECR_ACCOUNT_URL}/jtreutel-caching-demo:${CIRCLE_BUILD_NUM}"
