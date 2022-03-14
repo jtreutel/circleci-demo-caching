@@ -19,6 +19,10 @@ jobs:
           paths:
             - .
   test:
+    parameters:
+      cache-version:
+        type: string
+        default: v1
     executor:
       name: node/default
       tag: '15.7'
@@ -27,8 +31,8 @@ jobs:
           at: .
       - restore_cache:
           keys: 
-            - node-deps-{{ .Branch }}-{{ .Environment.cacheVersion }}-{{ checksum "package.json" }}
-            - node-deps-{{ .Branch }}-{{ .Environment.cacheVersion }}-
+            - node-deps-{{ .Branch }}-<< parameters.cache-version >>-{{ checksum "package.json" }}
+            - node-deps-{{ .Branch }}-<< parameters.cache-version >>-
             - node-deps-{{ .Branch }}-
           paths:
             - ./node_modules
@@ -36,7 +40,7 @@ jobs:
       - run:
           command: npm run test
       - save_cache:
-          key: node-deps-{{ .Branch }}-{{ .Environment.cacheVersion }}-{{ checksum "package.json" }}
+          key: node-deps-{{ .Branch }}-<< parameters.cache-version >>-{{ checksum "package.json" }}
           paths:
             - ./node_modules
   build-and-push-image:
@@ -51,7 +55,7 @@ jobs:
           repo: caching-demo
       - run: 
           name: Build Docker image
-          command: docker build . -t ${AWS_ECR_ACCOUNT_URL}/caching-demo:${CIRCLE_BUILD_NUM}"
+          command: docker build . -t ${AWS_ECR_ACCOUNT_URL}/jtreutel-caching-demo:${CIRCLE_BUILD_NUM}"
       - aws-ecr/push-image:
           repo: caching-demo
           tag: "${CIRCLE_BUILD_NUM}"
