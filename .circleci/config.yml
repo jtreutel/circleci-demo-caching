@@ -15,9 +15,9 @@ jobs:
     steps:
       - checkout
       - persist_to_workspace:
-          root: ./project/
+          root: .
           paths:
-            - .
+            - ./project
   test:
     executor:
       name: node/default
