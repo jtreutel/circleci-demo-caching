@@ -1,0 +1,76 @@
+#This configures the CircleCI config.yml version.  Currently, 2.1 is the latest version.zs
+version: 2.1
+
+#Orbs are reusable packages of pipeline configuration maintained by CircleCI, our partners, or our community.
+orbs:
+  node: circleci/node@4.0.0
+  aws-ecr: circleci/aws-ecr@7.3.0
+
+
+#This is an unordered list of jobs that CircleCI will run in this pipeline.
+jobs:
+  checkout-code:
+    docker:
+      - image: cimg/base:2022.03
+    steps:
+      - checkout
+      - persist_to_workspace:
+          root: .
+          paths:
+            - .
+  test:
+    parameters:
+      cache-version:
+        type: string
+        default: v1
+    executor:
+      name: node/default
+      tag: '15.7'
+    steps:
+      - attach_workspace:
+          at: .
+      - restore_cache:
+          keys: 
+            - node-deps-{{ .Branch }}-<< parameters.cache-version >>-{{ checksum "package.json" }}
+            - node-deps-{{ .Branch }}-<< parameters.cache-version >>-
+            - node-deps-{{ .Branch }}-
+          paths:
+            - ./node_modules
+      - node/install-packages
+      - run:
+          command: npm run test
+      - save_cache:
+          key: node-deps-{{ .Branch }}-<< parameters.cache-version >>-{{ checksum "package.json" }}
+          paths:
+            - ./node_modules
+  build-and-push-image:
+    machine:
+      image: ubuntu-2004:202010-01
+      docker_layer_caching: true
+    resource_class: large
+    steps:
+      - attach_workspace:
+          at: .
+      - run: 
+          name: Build Docker image
+          command: docker build . -t "${AWS_ECR_ACCOUNT_URL}/jtreutel-caching-demo:${CIRCLE_BUILD_NUM}"
+      - aws-ecr/ecr-login
+      - aws-ecr/push-image:
+          repo: jtreutel-caching-demo
+          tag: "${CIRCLE_BUILD_NUM}"
+
+
+
+#Workflows specify the logic according to which the jobs should be run.
+workflows:
+  version: 2
+  test-and-build:                
+    jobs:
+      - checkout-code
+      - test:
+          requires:
+            - checkout-code
+      - build-and-push-image:
+          context: node-demo
+          requires:
+            - test

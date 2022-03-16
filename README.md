@@ -1,2 +1,3 @@
-# circleci-demo-caching
-Demo of CircleCI's caching features.
+# CircleCI Caching Demo
+
+A simple demo project demonstrating the use of workspaces, caching, and Docker Layer Caching.
